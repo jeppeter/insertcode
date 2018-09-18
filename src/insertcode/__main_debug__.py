@@ -558,11 +558,10 @@ class insertcode_test(unittest.TestCase):
 
 def debug_release():
     if '-v' in sys.argv[1:]:
-        #sys.stderr.write('will make verbose\n')
         loglvl =  logging.DEBUG
         logging.basicConfig(level=loglvl,format='%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
-    topdir = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
-    tofile= os.path.abspath(os.path.join(topdir,'obcode.py'))
+    topdir = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','..'))
+    tofile= os.path.abspath(os.path.join(topdir,'insertcode','__main__.py'))
     if len(sys.argv) > 2:
         for k in sys.argv[1:]:
             if not k.startswith('-'):
@@ -605,4 +604,4 @@ def debug_main():
 ##importdebugend
 
 if __name__ == '__main__':
-    main()
+    debug_main()
