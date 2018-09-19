@@ -1,14 +1,15 @@
 #!/usr/bin/python
 import setuptools
 
-setuptools.setup(name='extargsparse',
+setuptools.setup(name='insertcode',
 	version=%VERSIONNUM%,
-	description='extension class for argparse with json configuration',
-	url='http://github.com/jeppeter/extargsparse',
+	description='extension util for insert different code in the different file type',
+	url='http://github.com/jeppeter/insertcode',
 	author='jeppeter Wang',
 	author_email='jeppeter@gmail.com',
 	license='MIT',
 	packages=setuptools.find_packages(),
+	install_requires=['extargsparse'],
 	zip_safe=True,
 	classifiers=[
         "Programming Language :: Python",
