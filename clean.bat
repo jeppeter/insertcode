@@ -21,3 +21,4 @@ rmdir /Q /S %script_dir%insertcode 2>NUL
 rmdir /Q /S %script_dir%__pycache__ 2>NUL
 rmdir /Q /S %script_dir%src\insertcode\__pycache__ 2>NUL
 rmdir /Q /S %script_dir%insertcode.egg-info 2>NUL
+rmdir /Q /S %script_dir%build 2>NUL

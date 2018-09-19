@@ -20,3 +20,4 @@ rm -rf $script_dir/insertcode
 rm -rf $script_dir/__pycache__
 rm -rf $script_dir/src/insertcode/__pycache__
 rm -rf $script_dir/insertcode.egg-info
+rm -rf $script_dir/build

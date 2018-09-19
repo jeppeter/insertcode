@@ -397,6 +397,11 @@ def pythonperl_handler(args,parser):
     sys.exit(0)
     return
 
+def version_handler(args,parser):
+    sys.stdout.write('insertcode VERSION_RELACE_STRING\n')
+    sys.exit(0)
+    return
+
 def main():
     commandline='''
     {
@@ -424,9 +429,13 @@ def main():
         },
         "pythonperl<pythonperl_handler>" : {
             "$" : "*"
+        },
+        "version<version_handler>" : {
+            "$" : 0
         }
     }
     '''
+    options = extargsparse.ExtArgsOptions('{ "version" : "VERSION_RELACE_STRING"}')
     parser = extargsparse.ExtArgsParse()
     parser.load_command_line_string(commandline)
     args = parser.parse_command_line(None,parser)
