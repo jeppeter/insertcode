@@ -1,0 +1,11 @@
+define COPY_TO
+$(shell perl -e "use strict;my (\$$cmd)=\"%REPLACE_PATTERN%\";eval \$$cmd;" --  "$(1)" "$(2)" )
+endef
+
+all:cpto.pl.tmpl
+
+cpto.pl.tmpl:cpto.pl
+	$(call COPY_TO, $<,$@)
+
+clean:
+	rm -f cpto.pl.tmpl

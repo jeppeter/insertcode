@@ -47,6 +47,13 @@ wait_file_until()
 rm -f $script_dir/insertcode/__main__.py.touched 
 rm -f $script_dir/insertcode/__init__.py.touched
 
+$PYTHON $script_dir/src/insertcode/__main_debug__.py test -f
+if [ $? -ne 0 ]
+	then
+	echo "not running test ok" >&2
+	exit 4
+fi
+
 $PYTHON $script_dir/make_setup.py
 $PYTHON $script_dir/src/insertcode/__main_debug__.py --release -v $script_dir/insertcode/__main__.py
 wait_file_until "$script_dir/insertcode/__main__.py.touched"

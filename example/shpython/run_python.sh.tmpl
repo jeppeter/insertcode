@@ -1,0 +1,4 @@
+#! /bin/sh
+
+PYTHON_PRINT_STR="import sys;cmd='%REPLACE_PATTERN%';exec('%s'%(cmd));"
+python -c "$PYTHON_PRINT_STR"  $@

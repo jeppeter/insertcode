@@ -130,6 +130,10 @@ Getopt::Long::GetOptions(\%args,
 		},
 	"simple|s") || die "can not parse [@oldargv]";
 
+print Dumper(\%args);
+if (defined($args{'help'})) {
+	Usage(0,"");
+}
 
 if (scalar(@ARGV) == 0) {
 	if (defined($args{'help'})) {

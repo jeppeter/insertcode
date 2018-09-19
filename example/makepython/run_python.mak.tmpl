@@ -1,0 +1,11 @@
+define COPY_TO
+$(shell python -c "import sys;c='%REPLACE_PATTERN%';exec(c);" $(1) $(2))
+endef
+
+all:cpto.py.tmpl
+
+cpto.py.tmpl:cpto.py
+	$(call COPY_TO, $<,$@)
+
+clean:
+	rm -f cpto.py.tmpl

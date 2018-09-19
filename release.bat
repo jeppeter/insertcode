@@ -9,6 +9,12 @@ if -%PYTHON%- == -- (
 
 echo "PYTHON [%PYTHON%]"
 
+%PYTHON% %script_dir%src\insertcode\__main_debug__.py test -f
+if not errorlevel 0 (
+	echo "not test ok" >&2
+	goto :fail
+)
+
 del /Q /F %script_dir%insertcode\__main__.py.touched 2>NUL
 del /Q /F %script_dir%insertcode\__init__.py.touched 2>NUL
 
@@ -68,9 +74,13 @@ if not exist %1 (
 del /F /Q %1
 exit /b 0
 
+:fail
+
+goto :last
 :end
 
 
 copy /Y %script_dir%README.md %script_dir%insertcode\README
 
+:last
 echo on
