@@ -15,6 +15,8 @@ def set_log_level(args):
     elif args.verbose >= 1 :
         loglvl = logging.WARN
     # we delete old handlers ,and set new handler
+    if logging.root is not None and logging.root.handlers is not None and len(logging.root.handlers) > 0:
+        logging.root.handlers = []
     logging.basicConfig(level=loglvl,format='%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
     return
 
@@ -23,6 +25,8 @@ def __get_bash_string_file(infile):
     logging.info('open file [%s] for string'%(infile))
     with open(infile,'rb')  as fin:
         for l in fin:
+            if sys.version[0] == '3' and 'b' in fin.mode:
+                l = l.decode('utf-8')
             curs = ''
             for c in l:
                 if c == '$':
@@ -55,9 +59,13 @@ def replace_string(args,repls):
         fout = open(args.output,'w+b')
 
     for l in fin:
+        if sys.version[0] == '3' and 'b' in fin.mode:
+            l = l.decode('utf-8')
         chgstr = l.replace(args.pattern,repls)
-        fout.write('%s'%(chgstr))
-        #logging.info('[%s] => [%s]'%(l,chgstr))
+        if sys.version[0] == '3' and 'b' in fout.mode:
+            fout.write(chgstr.encode('utf-8'))
+        else:
+            fout.write('%s'%(chgstr))
     if fin != sys.stdin:
         fin.close()
     fin = None
@@ -85,6 +93,8 @@ def __get_insert_string_file(infile):
     with open(infile,'rb') as fin:
         i = 0
         for l in fin:
+            if sys.version[0] == '3' and 'b' in fin.mode:
+                l = l.decode('utf-8')
             i += 1
             if i == 1 and l.startswith('#!'):
                 continue
@@ -123,6 +133,8 @@ def __get_make_python(args,infile):
         fin = open(infile,'rb')
 
     for l in fin:
+        if sys.version[0] == '3' and 'b' in fin.mode:
+            l = l.decode('utf-8')
         for c in l:
             if c == '\r':
                 s += '\\\\'
@@ -172,6 +184,8 @@ def __get_make_perl(args,infile):
         fin = open(infile,'rb')
 
     for l in fin:
+        if sys.version[0] == '3' and 'b' in fin.mode:
+            l = l.decode('utf-8')
         for c in l:
             if c == '#':
                 s += '\\'
@@ -236,6 +250,8 @@ def __get_sh_perl(args,infile):
         fin = open(infile,'rb')
 
     for l in fin:
+        if sys.version[0] == '3' and 'b' in fin.mode:
+            l = l.decode('utf-8')
         for c in l:
             if c == '#':
                 s += '\\'
@@ -297,6 +313,8 @@ def __get_sh_python(args,infile):
         fin = open(infile,'rb')
 
     for l in fin:
+        if sys.version[0] == '3' and 'b' in fin.mode:
+            l = l.decode('utf-8')
         for c in l:
             if c == '\n':
                 s += '\\'
@@ -351,6 +369,8 @@ def __get_python_perl(args,infile):
         fin = open(infile,'rb')
 
     for l in fin:
+        if sys.version[0] == '3' and 'b' in fin.mode:
+            l = l.decode('utf-8')
         for c in l:
             if c == '\n':
                 s += '\\'
@@ -563,7 +583,131 @@ class _LoggerObject(object):
 
 
 class insertcode_test(unittest.TestCase):
-    pass
+    def setUp(self):
+        keyname = '_%s__logger'%(self.__class__.__name__)
+        if getattr(self,keyname,None) is None:
+            self.__logger = _LoggerObject('insertcode')
+        self.__tmp_files = []
+        self.__tmp_descrs = []
+        return
+
+    def info(self,msg,callstack=1):
+        return self.__logger.info(msg,(callstack + 1))
+
+    def error(self,msg,callstack=1):
+        return self.__logger.error(msg,(callstack + 1))
+
+    def warn(self,msg,callstack=1):
+        return self.__logger.warn(msg,(callstack + 1))
+
+    def debug(self,msg,callstack=1):
+        return self.__logger.debug(msg,(callstack + 1))
+
+    def fatal(self,msg,callstack=1):
+        return self.__logger.fatal(msg,(callstack + 1))
+
+    def __remove_file_ok(self,filename,description=''):
+        ok = True
+        if 'INSERTCODE_TEST_RESERVED' in os.environ.keys():
+            ok = False
+        if filename is not None and ok:
+            os.remove(filename)
+        elif filename is not None:
+            self.error('%s %s'%(description,filename))
+        return
+
+    def tearDown(self):
+        if len(self.__tmp_files) > 0:
+            idx = 0
+            assert(len(self.__tmp_descrs) == len(self.__tmp_files))
+            while idx < len(self.__tmp_files):
+                c = self.__tmp_files[idx]
+                d = self.__tmp_descrs[idx]
+                self.__remove_file_ok(c,d)
+                idx += 1                
+        self.__tmp_files = []
+        self.__tmp_descrs = []
+        return
+
+    @classmethod
+    def setUpClass(cls):
+        return
+
+    @classmethod
+    def tearDownClass(cls):
+        return
+
+    def __write_temp_file(self,content,description='',suffix_add=None):
+        if suffix_add is None:
+            if sys.platform == 'win32':
+                suffix_add = '.cpp'
+            else:
+                suffix_add = '.c'
+        fd , tempf = tempfile.mkstemp(suffix=suffix_add,prefix='parse',dir=None,text=True)
+        os.close(fd)
+        with open(tempf,'w') as f:
+            f.write('%s'%(content))
+        self.info('tempf %s'%(tempf))
+        self.__tmp_files.append(tempf)
+        self.__tmp_descrs.append(description)
+        return tempf        
+
+
+    def test_A001(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echocode.tmpl')
+        infile = os.path.join(topdir,'test','bash','a.sh')
+        cmds = '%s %s -i %s bashstring -p \'%%REPLACE_PATTERN%%\' %s | bash | diff -B - %s'%(sys.executable, __file__,echofile, infile,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
+    def test_A002(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echocode_perl.mak.tmpl')
+        infile = os.path.join(topdir,'test','perl','a.pl')
+        cmds = '%s %s -i %s makeperl -p \'%%REPLACE_PATTERN%%\' %s | make  -f /dev/stdin | diff - %s'%(sys.executable, __file__,echofile, infile,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
+    def test_A003(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echocode_python.mak.tmpl')
+        infile = os.path.join(topdir,'test','python','a.py')
+        cmds = '%s %s -i %s makepython -p \'%%REPLACE_PATTERN%%\' %s | make  -f /dev/stdin | diff - %s'%(sys.executable, __file__,echofile, infile,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
+    def test_A004(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echocode_perl.sh.tmpl')
+        infile = os.path.join(topdir,'test','perl','a.pl')
+        cmds = '%s %s -i %s shperl -p \'%%REPLACE_PATTERN%%\' %s | bash | diff -B - %s'%(sys.executable, __file__,echofile, infile,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
+    def test_A005(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echocode_python.sh.tmpl')
+        infile = os.path.join(topdir,'test','python','a.py')
+        cmds = '%s %s -i %s shpython -p \'%%REPLACE_PATTERN%%\' %s | bash | diff -B - %s'%(sys.executable, __file__,echofile, infile,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
 
 def debug_release():
     if '-v' in sys.argv[1:]:
