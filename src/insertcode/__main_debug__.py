@@ -417,6 +417,45 @@ def pythonperl_handler(args,parser):
     sys.exit(0)
     return
 
+def __get_python_c(args,infile):
+    s = ''
+    fin = sys.stdin
+    if infile is not None:
+        fin = open(infile,'rb')
+
+    for l in fin:
+        if sys.version[0] == '3' and 'b' in fin.mode:
+            l = l.decode('utf-8')
+        for c in l:
+            if c == '%':
+                s += '%'
+                s += '%'
+            elif c == '\'':
+                s += '\\'
+                s += '\''
+            elif c == '\\':
+                s += '\\'
+                s += '\\'
+            else:
+                s += c
+    if fin != sys.stdin:
+        fin.close()
+    fin = None
+    return s
+
+def get_python_c(args):
+    s = ''
+    for infile in args.subnargs:
+        s += __get_python_c(args,infile)
+    return s
+
+def pythonc_handler(args,parser):
+    set_log_level(args)
+    repls = get_python_c(args)
+    replace_string(args,repls)
+    sys.exit(0)
+    return
+
 def version_handler(args,parser):
     sys.stdout.write('insertcode VERSION_RELACE_STRING\n')
     sys.exit(0)
@@ -448,6 +487,9 @@ def main():
             "$" : "*"
         },
         "pythonperl<pythonperl_handler>" : {
+            "$" : "*"
+        },
+        "pythonc<pythonc_handler>" : {
             "$" : "*"
         },
         "version<version_handler>" : {
@@ -704,6 +746,17 @@ class insertcode_test(unittest.TestCase):
         echofile = os.path.join(topdir,'test','template','echocode_python.sh.tmpl')
         infile = os.path.join(topdir,'test','python','a.py')
         cmds = '%s %s -i %s shpython -p \'%%REPLACE_PATTERN%%\' %s | bash | diff -B - %s'%(sys.executable, __file__,echofile, infile,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
+    def test_A006(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echoc.py.tmpl')
+        infile = os.path.join(topdir,'test','c','hello.c')
+        cmds = '%s %s -i %s pythonc -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,echofile, infile, sys.executable,infile)
         self.info('cmds [%s]'%(cmds))
         subprocess.check_call(['bash','-c',cmds])
         return
