@@ -2,6 +2,7 @@
 * extension util for insert different code in the different file type
 
 # release notes
+* Dec 6th  2018 release 0.0.6 for pythonc subcommand to transfer c language to python string
 * Sep 20th 2018 release 0.0.4 for python3 support
 * Sep 19th 2018 release 0.0.2 for first use
 
@@ -522,3 +523,40 @@ python -m insertcode makeperl -i run_perl.mak.tmpl -o run_perl.mak makepython -p
 make -f run_perl.mak all
 ```
 
+## c insert into python
+> hello.c
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc,char* argv[])
+{
+	printf("hello world\n");
+	return 0;
+}
+```
+
+
+> echoc.py.tmpl
+```python
+#! /usr/bin/env python
+
+import sys
+
+LONG_C_FILE='''%REPLACE_PATTERN%'''
+
+
+def main():
+	sys.stdout.write('%s'%(LONG_C_FILE))
+	return
+
+if __name__ == '__main__':
+	main()
+```
+
+> run shell
+```shell
+python -m insertcode pythonc -i echoc.py.tmpl -o echoc.py -p '%REPLACE_PATTERN%' hello.c
+```
+
+> run new python file echoc.py will output hello.c file content
