@@ -2,6 +2,7 @@
 * extension util for insert different code in the different file type
 
 # release notes
+* Dec 7th  2018 release 0.0.8 for fixup pythonc bug when used % in the c file
 * Dec 6th  2018 release 0.0.6 for pythonc subcommand to transfer c language to python string
 * Sep 20th 2018 release 0.0.4 for python3 support
 * Sep 19th 2018 release 0.0.2 for first use

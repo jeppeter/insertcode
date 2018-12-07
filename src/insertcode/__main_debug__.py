@@ -427,10 +427,7 @@ def __get_python_c(args,infile):
         if sys.version[0] == '3' and 'b' in fin.mode:
             l = l.decode('utf-8')
         for c in l:
-            if c == '%':
-                s += '%'
-                s += '%'
-            elif c == '\'':
+            if c == '\'':
                 s += '\\'
                 s += '\''
             elif c == '\\':
@@ -756,6 +753,17 @@ class insertcode_test(unittest.TestCase):
         topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
         echofile = os.path.join(topdir,'test','template','echoc.py.tmpl')
         infile = os.path.join(topdir,'test','c','hello.c')
+        cmds = '%s %s -i %s pythonc -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,echofile, infile, sys.executable,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
+    def test_A007(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echoc.py.tmpl')
+        infile = os.path.join(topdir,'test','c','more.c')
         cmds = '%s %s -i %s pythonc -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,echofile, infile, sys.executable,infile)
         self.info('cmds [%s]'%(cmds))
         subprocess.check_call(['bash','-c',cmds])
