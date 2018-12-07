@@ -747,26 +747,33 @@ class insertcode_test(unittest.TestCase):
         subprocess.check_call(['bash','-c',cmds])
         return
 
+    def __cmp_c_file(self,echofile,infile):
+        cmds = '%s %s -i %s pythonc -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,echofile, infile, sys.executable,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
     def test_A006(self):
         if sys.platform == 'win32':
             return
         topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
         echofile = os.path.join(topdir,'test','template','echoc.py.tmpl')
         infile = os.path.join(topdir,'test','c','hello.c')
-        cmds = '%s %s -i %s pythonc -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,echofile, infile, sys.executable,infile)
-        self.info('cmds [%s]'%(cmds))
-        subprocess.check_call(['bash','-c',cmds])
-        return
-
-    def test_A007(self):
-        if sys.platform == 'win32':
-            return
-        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
-        echofile = os.path.join(topdir,'test','template','echoc.py.tmpl')
+        self.__cmp_c_file(echofile,infile)
         infile = os.path.join(topdir,'test','c','more.c')
-        cmds = '%s %s -i %s pythonc -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,echofile, infile, sys.executable,infile)
-        self.info('cmds [%s]'%(cmds))
-        subprocess.check_call(['bash','-c',cmds])
+        self.__cmp_c_file(echofile,infile)
+        infile = os.path.join(topdir,'test','c','crc32calc.c')
+        self.__cmp_c_file(echofile,infile)
+        infile = os.path.join(topdir,'test','c','md5calc.c')
+        self.__cmp_c_file(echofile,infile)
+        infile = os.path.join(topdir,'test','c','sha256calc.c')
+        self.__cmp_c_file(echofile,infile)
+        infile = os.path.join(topdir,'test','c','sha3calc.c')
+        self.__cmp_c_file(echofile,infile)
+        infile = os.path.join(topdir,'test','c','chkval.c')
+        self.__cmp_c_file(echofile,infile)
+        infile = os.path.join(topdir,'test','c','chkvaldef.c')
+        self.__cmp_c_file(echofile,infile)
         return
 
 
