@@ -1,0 +1,4 @@
+PYTHON_CODE="import sys;c='%REPLACE_PATTERN%';sys.stdout.write('%s'%(c));"
+
+all:
+	@python -c ${PYTHON_CODE} | python

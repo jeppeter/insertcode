@@ -2,6 +2,7 @@
 * extension util for insert different code in the different file type
 
 # release notes
+* Dec 9th  2018 release 0.1.0 for add bz2base64 and bz2base64mak to add base64 code with 
 * Dec 7th  2018 release 0.0.8 for fixup pythonc bug when used % in the c file
 * Dec 6th  2018 release 0.0.6 for pythonc subcommand to transfer c language to python string
 * Sep 20th 2018 release 0.0.4 for python3 support
@@ -561,3 +562,28 @@ python -m insertcode pythonc -i echoc.py.tmpl -o echoc.py -p '%REPLACE_PATTERN%'
 ```
 
 > run new python file echoc.py will output hello.c file content
+
+## bz2base64mak
+> to insert code into make by bz2 compress
+> cpto.mak.tmpl
+```makefile
+
+COPY_TO="import sys;c='%REPLACE_PATTERN%';sys.stdout.write('%s'%(c));"
+define COPY_TO
+$(shell python -c ${COPY_TO} | python /dev/stdin | python /dev/stdin -- $(1) $(2))
+endef
+
+all:cpto.py.tmpl
+
+cpto.py.tmpl:cpto.py
+	$(call COPY_TO, $<,$@)
+
+clean:
+	rm -f cpto.py.tmpl
+
+```
+
+> run 
+```shell
+python -m insertcode bz2base64mak -i cpto.py -o cpto.mak cpto.mak.tmpl
+```

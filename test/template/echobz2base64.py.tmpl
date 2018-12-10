@@ -1,0 +1,12 @@
+#! /usr/bin/env python
+
+import bz2
+import base64
+import sys
+GL_REPLACE_STRING='''%REPLACE_PATTERN%'''
+code = base64.b64decode(GL_REPLACE_STRING)
+s = bz2.decompress(code)
+if sys.version[0] == '3':
+    s = s.decode('utf-8')
+sys.stdout.write('%s'%(s))
+

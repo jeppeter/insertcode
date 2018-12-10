@@ -5,6 +5,8 @@ import sys
 import os
 import logging
 import re
+import bz2
+import base64
 
 def set_log_level(args):
     loglvl= logging.ERROR
@@ -458,6 +460,116 @@ def version_handler(args,parser):
     sys.exit(0)
     return
 
+def get_bz2_base64(args):
+    fin = sys.stdin
+    if args.input is not None:
+        fin = open(args.input, 'rb')
+    data = fin.read()
+    if 'b' not in fin.mode:
+        if sys.version[0] == '3':
+            data = data.encode('utf-8')
+        else:
+            data = bytes(data)
+    if fin != sys.stdin:
+        fin.close()
+    fin = None
+    cmprdata = bz2.compress(data,9)
+    return base64.b64encode(cmprdata)
+
+
+def bz2base64_handler(args,parser):
+    set_log_level(args)
+    s = get_bz2_base64(args)
+    if sys.version[0] == '3':
+        s = s.decode('utf-8')
+    else:
+        s = str(s)
+    outs = ''
+    with open(args.subnargs[0],'r') as fin:
+        for l in fin:
+            l = l.replace(args.pattern,s)
+            outs += l
+    fout = sys.stdout
+    if args.output is not None:
+        fout = open(args.output,'wb')
+    if 'b' in fout.mode:
+        if sys.version[0] == '3':
+            outs = outs.encode('utf-8')
+        else:
+            outs = bytes(outs)
+    fout.write(outs)
+    if fout != sys.stdout:
+        fout.close()
+    fout = None
+    sys.exit(0)
+    return
+
+GL_ECHO_BASE64_STR='''
+import bz2
+import base64
+import sys
+GL_REPLACE_STRING=\'\'\'%REPLACE_PATTERN%\'\'\'
+code = base64.b64decode(GL_REPLACE_STRING)
+s = bz2.decompress(code)
+if sys.version[0] == '3':
+    s = s.decode('utf-8')
+sys.stdout.write('%s'%(s))
+'''
+
+def bz2base64mak_handler(args,parser):
+    set_log_level(args)
+    s = get_bz2_base64(args)
+    if sys.version[0] == '3':
+        s = s.decode('utf-8')
+    else:
+        s = str(s)
+    ins = ''
+    ins = GL_ECHO_BASE64_STR.replace('%REPLACE_PATTERN%', s)
+    s = ''
+    for c in ins:
+        if c == '\r':
+            s += '\\\\'
+            s += 'r'
+        elif c == '\n':
+            s += '\\\\'
+            s += 'n'
+        elif c == '\t':
+            s += '\\\\'
+            s += 't'
+        elif c == '\\':
+            s += '\\\\\\\\'
+        elif c == '\'':
+            s += '\\\\\''
+        elif c == '"':
+            s += '\\"'
+        elif c == '$':
+            s += '\\$$'
+        elif c == '`':
+            s += '\\'
+            s += '`'
+        else:
+            s += c
+    outs = ''
+    with open(args.subnargs[0],'r') as fin:
+        for l in fin:
+            l = l.replace(args.pattern, s)
+            outs += l
+    fout = sys.stdout
+    if args.output is not None:
+        fout = open(args.output,'wb')
+    if 'b' in fout.mode:
+        if sys.version[0] == '3':
+            outs = outs.encode('utf-8')
+        else:
+            outs = bytes(outs)
+    fout.write(outs)
+    if fout != sys.stdout:
+        fout.close()
+    fout = None
+
+    sys.exit(0)
+    return
+
 def main():
     commandline='''
     {
@@ -491,6 +603,12 @@ def main():
         },
         "version<version_handler>" : {
             "$" : 0
+        },
+        "bz2base64<bz2base64_handler>" : {
+            "$" : 1
+        },
+        "bz2base64mak<bz2base64mak_handler>" : {
+            "$" : 1
         }
     }
     '''
@@ -774,6 +892,28 @@ class insertcode_test(unittest.TestCase):
         self.__cmp_c_file(echofile,infile)
         infile = os.path.join(topdir,'test','c','chkvaldef.c')
         self.__cmp_c_file(echofile,infile)
+        return
+
+    def test_A007(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echobz2base64.py.tmpl')
+        infile = os.path.join(topdir,'test','python','echo.py')
+        cmds = '%s %s -i %s bz2base64 -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,infile, echofile, sys.executable,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
+        return
+
+    def test_A008(self):
+        if sys.platform == 'win32':
+            return
+        topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
+        echofile = os.path.join(topdir,'test','template','echobz2base64.mak.tmpl')
+        infile = os.path.join(topdir,'test','python','echo.py')
+        cmds = '%s %s -i %s bz2base64mak -p \'%%REPLACE_PATTERN%%\' %s | make -f /dev/stdin | diff -B - %s'%(sys.executable, __file__,infile, echofile,infile)
+        self.info('cmds [%s]'%(cmds))
+        subprocess.check_call(['bash','-c',cmds])
         return
 
 
