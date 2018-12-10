@@ -585,5 +585,5 @@ clean:
 
 > run 
 ```shell
-python -m insertcode bz2base64mak -i cpto.py -o cpto.mak cpto.mak.tmpl
+python -m insertcode bz2base64mak -i cpto.mak.tmpl  -o cpto.mak  cpto.py
 ```

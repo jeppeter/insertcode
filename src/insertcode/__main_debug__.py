@@ -460,47 +460,34 @@ def version_handler(args,parser):
     sys.exit(0)
     return
 
-def get_bz2_base64(args):
-    fin = sys.stdin
-    if args.input is not None:
-        fin = open(args.input, 'rb')
+def __get_bz2_base64(args,infile):
+    fin = open(infile,'rb')
     data = fin.read()
     if 'b' not in fin.mode:
         if sys.version[0] == '3':
             data = data.encode('utf-8')
         else:
             data = bytes(data)
-    if fin != sys.stdin:
-        fin.close()
+    fin.close()
     fin = None
     cmprdata = bz2.compress(data,9)
-    return base64.b64encode(cmprdata)
+    retdata = base64.b64encode(cmprdata)
+    if sys.version[0] == '3':
+        retdata = retdata.decode('utf-8')
+    else:
+        retdata = str(retdata)
+    return retdata
 
+def get_bz2_base64(args):
+    s = ''
+    for f in args.subnargs:
+        s += __get_bz2_base64(args,f)
+    return s
 
 def bz2base64_handler(args,parser):
     set_log_level(args)
-    s = get_bz2_base64(args)
-    if sys.version[0] == '3':
-        s = s.decode('utf-8')
-    else:
-        s = str(s)
-    outs = ''
-    with open(args.subnargs[0],'r') as fin:
-        for l in fin:
-            l = l.replace(args.pattern,s)
-            outs += l
-    fout = sys.stdout
-    if args.output is not None:
-        fout = open(args.output,'wb')
-    if 'b' in fout.mode:
-        if sys.version[0] == '3':
-            outs = outs.encode('utf-8')
-        else:
-            outs = bytes(outs)
-    fout.write(outs)
-    if fout != sys.stdout:
-        fout.close()
-    fout = None
+    repls = get_bz2_base64(args)
+    replace_string(args,repls)
     sys.exit(0)
     return
 
@@ -519,10 +506,6 @@ sys.stdout.write('%s'%(s))
 def bz2base64mak_handler(args,parser):
     set_log_level(args)
     s = get_bz2_base64(args)
-    if sys.version[0] == '3':
-        s = s.decode('utf-8')
-    else:
-        s = str(s)
     ins = ''
     ins = GL_ECHO_BASE64_STR.replace('%REPLACE_PATTERN%', s)
     s = ''
@@ -549,24 +532,7 @@ def bz2base64mak_handler(args,parser):
             s += '`'
         else:
             s += c
-    outs = ''
-    with open(args.subnargs[0],'r') as fin:
-        for l in fin:
-            l = l.replace(args.pattern, s)
-            outs += l
-    fout = sys.stdout
-    if args.output is not None:
-        fout = open(args.output,'wb')
-    if 'b' in fout.mode:
-        if sys.version[0] == '3':
-            outs = outs.encode('utf-8')
-        else:
-            outs = bytes(outs)
-    fout.write(outs)
-    if fout != sys.stdout:
-        fout.close()
-    fout = None
-
+    replace_string(args,s)
     sys.exit(0)
     return
 
@@ -900,7 +866,7 @@ class insertcode_test(unittest.TestCase):
         topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
         echofile = os.path.join(topdir,'test','template','echobz2base64.py.tmpl')
         infile = os.path.join(topdir,'test','python','echo.py')
-        cmds = '%s %s -i %s bz2base64 -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,infile, echofile, sys.executable,infile)
+        cmds = '%s %s -i %s bz2base64 -p \'%%REPLACE_PATTERN%%\' %s | %s | diff -B - %s'%(sys.executable, __file__,echofile, infile, sys.executable,infile)
         self.info('cmds [%s]'%(cmds))
         subprocess.check_call(['bash','-c',cmds])
         return
@@ -911,7 +877,7 @@ class insertcode_test(unittest.TestCase):
         topdir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..'))
         echofile = os.path.join(topdir,'test','template','echobz2base64.mak.tmpl')
         infile = os.path.join(topdir,'test','python','echo.py')
-        cmds = '%s %s -i %s bz2base64mak -p \'%%REPLACE_PATTERN%%\' %s | make -f /dev/stdin | diff -B - %s'%(sys.executable, __file__,infile, echofile,infile)
+        cmds = '%s %s -i %s bz2base64mak -p \'%%REPLACE_PATTERN%%\' %s | make -f /dev/stdin | diff -B - %s'%(sys.executable, __file__,echofile,infile,infile)
         self.info('cmds [%s]'%(cmds))
         subprocess.check_call(['bash','-c',cmds])
         return
