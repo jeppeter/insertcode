@@ -124,8 +124,97 @@ def bashstring_handler(args,parser):
     sys.exit(0)
     return
 
+def __get_powershell_string_file(infile):
+    s = ''
+    logging.info('open file [%s] for string'%(infile))
+    with open(infile,'rb')  as fin:
+        for l in fin:
+            if sys.version[0] == '3' and 'b' in fin.mode:
+                l = l.decode('utf-8')
+            curs = ''
+            commentmode = False
+            for c in l:
+                if commentmode:
+                    continue
+                if c == '"':
+                    curs += '\\'
+                    curs += '"'
+                elif c == '\\':
+                    curs += '\\'
+                elif c == '\r':
+                    #curs += '\\r'
+                    curs += ';'
+                elif c == '\n':
+                    #curs += '\\n'
+                    curs += ';'
+                elif c == '#':
+                    commentmode = True
+                else:
+                    curs += c
+            s += curs
+            logging.info('[%s] => [%s]'%(l,curs))
+    #logging.info('[%s] (%s)'%(infile,s))
+    return s
+
+def get_powershell_string(args):
+    s = ''
+    for c in args.subnargs:
+        s += __get_powershell_string_file(c)
+    return s
+
+def __get_powershell_string_toc_file(infile):
+    s = ''
+    logging.info('open file [%s] for string'%(infile))
+    commentmode = False
+    with open(infile,'rb')  as fin:
+        for l in fin:
+            if sys.version[0] == '3' and 'b' in fin.mode:
+                l = l.decode('utf-8')
+            curs = ''
+            commentmode = False
+            for c in l:
+                if commentmode:
+                    continue
+                if c == '"':
+                    curs += '\\\\\\'
+                    curs += '"'
+                elif c == '\\':
+                    curs += '\\\\'
+                elif c == '\r':
+                    #curs += '\\r'
+                    curs += ';'
+                elif c == '\n':
+                    #curs += '\\n'
+                    curs += ';'
+                elif c == '#':
+                    commentmode = True
+                else:
+                    curs += c
+            s += curs
+            logging.info('[%s] => [%s]'%(l,curs))
+    #logging.info('[%s] (%s)'%(infile,s))
+    return s
+
+def get_powershell_string_toc(args):
+    s = ''
+    for c in args.subnargs:
+        s += __get_powershell_string_toc_file(c)
+    return s
+
+def pshcmdline_handler(args,parser):
+    set_log_level(args)
+    repls = get_powershell_string(args)
+    replace_string(args,repls)
+    sys.exit(0)
+    return
 
 
+def pshcmdlinetoc_handler(args,parser):
+    set_log_level(args)
+    repls = get_powershell_string_toc(args)
+    replace_string(args,repls)
+    sys.exit(0)
+    return
 
 
 def __get_make_python(args,infile):
@@ -575,7 +664,14 @@ def main():
         },
         "bz2base64mak<bz2base64mak_handler>" : {
             "$" : 1
+        },
+        "pshcmdline<pshcmdline_handler>" : {
+            "$" : "*"
+        },
+        "pshcmdlinetoc<pshcmdlinetoc_handler>" : {
+            "$" : "*"
         }
+
     }
     '''
     options = extargsparse.ExtArgsOptions('{ "version" : "VERSION_RELACE_STRING"}')
