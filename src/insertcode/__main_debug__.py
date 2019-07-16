@@ -143,10 +143,10 @@ def __get_powershell_string_file(infile):
                     curs += '\\'
                 elif c == '\r':
                     #curs += '\\r'
-                    curs += ';'
+                    curs += ' '
                 elif c == '\n':
                     #curs += '\\n'
-                    curs += ';'
+                    curs += ' '
                 elif c == '#':
                     commentmode = True
                 else:
@@ -182,10 +182,10 @@ def __get_powershell_string_toc_file(infile):
                     curs += '\\\\'
                 elif c == '\r':
                     #curs += '\\r'
-                    curs += ';'
+                    curs += ' '
                 elif c == '\n':
                     #curs += '\\n'
-                    curs += ';'
+                    curs += ' '
                 elif c == '#':
                     commentmode = True
                 else:
