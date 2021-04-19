@@ -2,6 +2,7 @@
 * extension util for insert different code in the different file type
 
 # release notes
+* Apr 19th 2021 release 0.1.6 for fixup bug in python3 not ok in \__get_insert_string_file
 * Jul 15th 2019 release 0.1.4 for add pshcmdline and pshcmdlinetoc 
 * Dec 9th  2018 release 0.1.0 for add bz2base64 and bz2base64mak to add base64 code with 
 * Dec 7th  2018 release 0.0.8 for fixup pythonc bug when used % in the c file

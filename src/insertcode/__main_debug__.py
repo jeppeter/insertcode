@@ -95,12 +95,13 @@ def __get_insert_string_file(infile):
     with open(infile,'rb') as fin:
         i = 0
         for l in fin:
-            if sys.version[0] == '3' and 'b' in fin.mode:
-                l = l.decode('utf-8')
             i += 1
-            if i == 1 and l.startswith('#!'):
+            if i == 1 and ( sys.version[0]=='3'  and (l.startswith(b'#!') ) or (sys.version[0]=='2' and l.startswith('#!')) ):
                 continue
-            s += l
+            if sys.version[0] == '3':
+                s += l.decode(encoding='UTF-8')
+            else:
+                s += l
     logging.info('[%s] (%s)'%(infile,s))
     return s
 
